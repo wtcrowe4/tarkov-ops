@@ -1,0 +1,25 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# runtime state
+data/*
+!data/.gitkeep
+inbox/*
+!inbox/.gitkeep
+out/*
+!out/.gitkeep
+docs/samples/*
+!docs/samples/.gitkeep
+config/grid.json
+
+# python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
