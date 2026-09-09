@@ -21,3 +21,14 @@ ADR-style, newest at the bottom. One line of context, one line of decision.
   Ids in the payload are tarkov.dev ids, so they join straight to gamedata.
 - **User-Agent is mandatory** on protected endpoints (5-200 chars). Client sends
   `tarkov-ops/<ver>`.
+
+## 2026-09-09 — tarkovtracker.org, not tarkovtracker.io
+
+- Owner's first account was on `tarkovtracker.io` (the older original). Its tokens are
+  22-char unprefixed base62, its API has no PvE/PvP split, ignores `If-None-Match`, and
+  sends no quota headers. TarkovMonitor treats it as a "legacy service".
+- **Decision: `tarkovtracker.org` only.** Actively developed, PvE profile is first-class,
+  public OpenAPI, TarkovMonitor's default. New `.org` account created 2026-09-09 with a
+  `PVE_` token. The `.io` account is abandoned. No dual-tracker support; one source of truth.
+- Verified live: `GET /token` → `gameMode=pve`, `GET /progress` → 200 with weak ETag,
+  `If-None-Match` → 304. Quota headers present.
