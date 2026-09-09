@@ -85,14 +85,15 @@ class TrackerClient:
                 f"Unexpected redirect to {r.headers.get('location')}; "
                 "TARKOVTRACKER_BASE must be https://api.tarkovtracker.org"
             )
+        if r.status_code == 304:
+            # httpx treats 3xx as an error in raise_for_status; 304 is our happy path.
+            return TrackerResponse(304, self._etag_cache.get(path), None, remaining, limit, reset)
         r.raise_for_status()
 
         etag = r.headers.get("ETag")
         if etag:
             self._etag_cache[path] = etag
-
-        data = None if r.status_code == 304 else r.json()
-        return TrackerResponse(r.status_code, etag, data, remaining, limit, reset)
+        return TrackerResponse(r.status_code, etag, r.json(), remaining, limit, reset)
 
     def progress(self, use_etag: bool = True) -> TrackerResponse:
         return self.get("/progress", use_etag=use_etag)
