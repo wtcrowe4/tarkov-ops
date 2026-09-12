@@ -86,5 +86,6 @@ Per `docs/plan.md` §5.2 and §5.4:
 - Beeper Desktop + `beeper-tui` (patched, `~/src/beeper-tui`) + `bp/bt/btg/msg` wrappers from
   `wtcrowe4/dev-config`. Third-party source checkouts live in `~/src` on Omarchy.
 - Owner is weighing a personal Oracle Cloud free-tier server for a Beeper GroupMe bridge and other
-  personal services. No usable GroupMe↔Matrix bridge exists as of 2026-09-11; it would be a from-scratch
-  mautrix bridgev2 project. `bbctl` does accept third-party appservices.
+  personal services. A complete, untested mautrix bridgev2 GroupMe bridge already exists at
+  `~/Projects/mautrix-groupme` (written 2026-09-10 in another session; builds with `./build.sh`).
+  `bbctl` accepts third-party bridgev2 appservices, so no homeserver is needed. Next step is testing.
