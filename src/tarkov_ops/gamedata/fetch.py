@@ -24,6 +24,7 @@ ENDPOINTS: dict[str, bool] = {
     "hideout": True,
     "items": True,
     "traders": True,
+    "crafts": False,
 }
 MAX_AGE = timedelta(hours=12)
 USER_AGENT = "tarkov-ops/0.1 (+https://github.com/wtcrowe4/tarkov-ops)"
