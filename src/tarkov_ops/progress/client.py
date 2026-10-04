@@ -44,6 +44,8 @@ class TrackerResponse:
 class TrackerClient:
     def __init__(self, settings: Settings | None = None, timeout: float = 20.0):
         self.settings = settings or get_settings()
+        if self.settings.tarkovtracker_token is None:
+            raise TrackerAuthError("TARKOVTRACKER_TOKEN is not set (see .env.example)")
         self._client = httpx.Client(
             base_url=self.settings.tarkovtracker_base,
             headers={

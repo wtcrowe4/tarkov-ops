@@ -22,7 +22,10 @@ class Settings(BaseSettings):
     )
 
     # Phase 0-2
-    tarkovtracker_token: SecretStr = Field(..., description="PVE_-prefixed TarkovTracker API token")
+    # Optional so gamedata commands work without a token; the tracker client requires it.
+    tarkovtracker_token: SecretStr | None = Field(
+        None, description="PVE_-prefixed TarkovTracker API token"
+    )
     tarkovtracker_base: str = "https://api.tarkovtracker.org"
     tarkov_json_base: str = "https://json.tarkov.dev"
     game_mode: str = "pve"
@@ -47,7 +50,9 @@ class Settings(BaseSettings):
 
     @field_validator("tarkovtracker_token")
     @classmethod
-    def _check_token_prefix(cls, v: SecretStr) -> SecretStr:
+    def _check_token_prefix(cls, v: SecretStr | None) -> SecretStr | None:
+        if v is None:
+            return v
         raw = v.get_secret_value()
         if not raw.startswith("PVE_"):
             raise ValueError(

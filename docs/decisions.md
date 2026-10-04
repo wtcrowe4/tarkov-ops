@@ -32,3 +32,25 @@ ADR-style, newest at the bottom. One line of context, one line of decision.
   `PVE_` token. The `.io` account is abandoned. No dual-tracker support; one source of truth.
 - Verified live: `GET /token` → `gameMode=pve`, `GET /progress` → 200 with weak ETag,
   `If-None-Match` → 304. Quota headers present.
+
+## 2026-10-04 — Phase 1: gamedata cache + needs engine (Alienware)
+
+- **Repo now lives on the Alienware** at `D:/Claude/Projects/tarkov-ops`. `.env` and
+  `docs/samples/` came over from Omarchy via Taildrop. TarkovMonitor and RatScanner are
+  unpacked to `D:/Games/TarkovTools/` (portable, no installer).
+- **Gamedata is a JSON file cache, not SQLite (yet).** `data/gamedata/<endpoint>.json` plus
+  `<endpoint>_en.json`, `meta.json` holds `fetchedAt`; 12h staleness. The documents are
+  small enough (~21 MB) to load in memory, and the needs engine is simpler against dicts.
+  SQLite comes back when stash scans and verdict history need persistence.
+- **Translation keys.** json.tarkov.dev stores names as keys (`"<id> Name"`,
+  `hideout_area_13_name`); the `_en` overlay resolves them. Resolved once at load.
+- **Token is optional in Settings** so `gamedata` commands run without one; the tracker
+  client raises if it is missing.
+- **Needs rules.** Item objectives = `giveItem` + `plantItem` (non-optional). `findItem` is
+  skipped because it pairs with a `giveItem` for the same items. Multi-item objectives
+  ("any 3 meds") are `any_of` needs, not pinned to one item. Currency is never a need.
+  Collector items are their own "Kappa" reason. Urgency: active task > next hideout level >
+  upcoming task (prereqs reachable, minPlayerLevel ≤ level+5) > later hideout level > Kappa.
+  Objective `count` and hideout part `count` from the tracker are subtracted.
+- **Tracker state on 2026-10-04:** level 14, `tasksProgress` empty, 5 hideout modules ticked.
+  TarkovMonitor has never run against this account; Read Past Logs on the Alienware is the fix.
