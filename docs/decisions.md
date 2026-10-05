@@ -54,3 +54,20 @@ ADR-style, newest at the bottom. One line of context, one line of decision.
   Objective `count` and hideout part `count` from the tracker are subtracted.
 - **Tracker state on 2026-10-04:** level 14, `tasksProgress` empty, 5 hideout modules ticked.
   TarkovMonitor has never run against this account; Read Past Logs on the Alienware is the fix.
+
+## 2026-10-05 — Field Card in repo; started tasks drive "active"
+
+- **1.0 gates many tasks on story progress (`otherRequirements` globalVariable) and trader
+  loyalty**, neither of which the tracker stores. Treating prereq-satisfied tasks as active gave
+  202 "available" tasks. Now: **active = tasks TarkovMonitor saw accepted** (tracker entry, not
+  complete, not failed); prereq-satisfied tasks without gates are "unlocked"; gated ones count only
+  once started.
+- **Field Card page lives in `publish/fieldcard_assets/`** and loads `data/{gear,loot,needs,routes}.json`
+  at runtime, so a refresh republishes data files without touching the page.
+  `tarkov-ops fieldcard build --level N` writes `out/fieldcard/`.
+- **Hideout levels are overridable on the page** (browser-local) because the tracker only knows
+  hand-ticked levels. Ticking on tarkovtracker.org remains the durable source.
+- **Player level override** (`--level`) until the tracker level is set by hand; TarkovMonitor never
+  writes level (verified in its source).
+- Routes: open objectives grouped by map (Night Factory, GZ 21+, Labs Dark folded in);
+  map-less objectives under "Anywhere / hideout".

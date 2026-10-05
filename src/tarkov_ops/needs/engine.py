@@ -82,8 +82,9 @@ class AnyOfNeed:
 @dataclass
 class TaskState:
     done: set[str]
-    available: set[str]
+    available: set[str]  # started (per tracker) + probably unlocked
     upcoming: set[str]
+    started: set[str] = field(default_factory=set)  # accepted in game, seen by TarkovMonitor
 
 
 @dataclass
@@ -117,15 +118,23 @@ def compute_task_state(gd: GameData, progress: ProgressData, level_window: int =
         tid: t for tid, t in gd.tasks.items() if t.get("factionName", "Any") in ("Any", faction)
     }
     open_tasks = {tid for tid in eligible if tid not in done and tid not in failed}
+    # Tasks TarkovMonitor saw you accept: the tracker holds them as not complete, not failed.
+    started = {t.id for t in progress.tasksProgress if not t.complete and not t.failed} & set(
+        eligible
+    )
 
-    # available: prerequisites met and level reached; iterate because "active" prereqs chain
-    available: set[str] = set()
+    # available: started, or prerequisites met and level reached. 1.0 also gates tasks on story
+    # progress (globalVariable) and trader loyalty, which the tracker doesn't record, so tasks
+    # with those gates only count once started. Iterate because "active" prereqs chain.
+    available: set[str] = set(started)
     changed = True
     while changed:
         changed = False
         for tid in open_tasks - available:
             t = eligible[tid]
             if (t.get("minPlayerLevel") or 0) > level:
+                continue
+            if t.get("otherRequirements") or t.get("traderRequirements"):
                 continue
             if all(_req_ok(r, done, failed, available) for r in t.get("taskRequirements", [])):
                 available.add(tid)
@@ -148,7 +157,7 @@ def compute_task_state(gd: GameData, progress: ProgressData, level_window: int =
             if ok:
                 upcoming.add(tid)
                 changed = True
-    return TaskState(done=done | failed, available=available, upcoming=upcoming)
+    return TaskState(done=done | failed, available=available, upcoming=upcoming, started=started)
 
 
 # ---------------------------------------------------------------- needs
@@ -187,9 +196,9 @@ def compute_needs(
             continue
         if state is None:
             urg = Urgency.UPCOMING_TASK
-        elif tid in state.available:
+        elif tid in state.started:
             urg = Urgency.ACTIVE_TASK
-        elif tid in state.upcoming:
+        elif tid in state.available or tid in state.upcoming:
             urg = Urgency.UPCOMING_TASK
         else:
             continue

@@ -121,7 +121,8 @@ def _progress(**kw) -> ProgressData:
 
 
 def test_states_and_counts():
-    res = compute_needs(_gd(), _progress())
+    # t1 accepted in game (tracker entry, not complete) -> active; others only unlocked
+    res = compute_needs(_gd(), _progress(tasksProgress=[{"id": "t1", "complete": False}]))
     st = res.task_state
     assert st is not None
     assert {"t1", "t4", "col"} <= st.available
@@ -139,7 +140,7 @@ def test_states_and_counts():
 
 def test_progress_subtracts():
     prog = _progress(
-        tasksProgress=[{"id": "t1", "complete": True}],
+        tasksProgress=[{"id": "t1", "complete": True}, {"id": "t2", "complete": False}],
         taskObjectivesProgress=[{"id": "o2", "complete": False, "count": 1}],
         hideoutModulesProgress=[{"id": "st-1", "complete": True}],
         hideoutPartsProgress=[{"id": "st-2-1", "complete": False, "count": 2}],
@@ -159,3 +160,12 @@ def test_no_progress_lists_everything():
     by = {n.item_id: n for n in res.items}
     assert by["folder"].total == 2 + 1 + 1 + 3  # t2, t3, Intel L1, Intel L2
     assert res.task_state is None
+
+
+def test_gated_tasks_need_start():
+    gd = _gd()
+    gd.tasks["t4"]["otherRequirements"] = [{"type": "globalVariable", "value": 3}]
+    st = compute_needs(gd, _progress()).task_state
+    assert st is not None and "t4" not in st.available
+    st = compute_needs(gd, _progress(tasksProgress=[{"id": "t4", "complete": False}])).task_state
+    assert st is not None and "t4" in st.available and "t4" in st.started

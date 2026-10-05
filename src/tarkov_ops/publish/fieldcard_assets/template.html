@@ -1,0 +1,302 @@
+<title>Tarkov Field Card</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky header (lookup + category tabs) over a tier board (S→D columns). Dark-only by design: second monitor next to the game. */
+:root{
+  --bg:#121412; --panel:#1a1d1a; --panel2:#20241f; --line:#2b302b; --fg:#e4e2d6; --muted:#8f927f; --accent:#c9b37e;
+  --tS:#e8574a; --tA:#e8963f; --tB:#d9c94a; --tC:#7fae5a; --tD:#5d6b72; --tQ:#7d7f9e; --flesh:#c76fb0;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif; --body:"Barlow",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font:14px/1.4 var(--body);padding:0 16px}
+.wrap{max-width:1400px;margin:0 auto;padding-block:0 40px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px 0;display:grid;gap:8px}
+.top{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+h1{font:700 24px/1 var(--display);letter-spacing:.05em;text-transform:uppercase;margin:0;white-space:nowrap}
+h1 span{color:var(--accent)}
+#q{flex:1 1 260px;min-width:0;font:500 15px var(--body);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:8px 11px}
+#q:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.keys{color:var(--muted);font:11px var(--mono)}
+.keys kbd{border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--fg);font:inherit}
+nav{display:flex;gap:2px;overflow-x:auto}
+nav button{font:600 15px var(--display);letter-spacing:.06em;text-transform:uppercase;background:none;color:var(--muted);border:0;border-bottom:3px solid transparent;padding:6px 12px 7px;cursor:pointer;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav button:focus-visible{outline:2px solid var(--accent)}
+nav button small{font:11px var(--mono);color:var(--muted);margin-left:4px;letter-spacing:0}
+.bar{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding-block:10px}
+.rule{color:var(--muted);font-size:12.5px;flex:1 1 320px;min-width:0}
+.rule b{color:var(--fg);font-weight:600}
+.pill{font:500 12px var(--body);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#121412}
+.pill:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+select{font:500 13px var(--body);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:5px 8px}
+.grp{display:flex;flex-wrap:wrap;gap:5px}
+/* tier board */
+.board{display:grid;grid-template-columns:repeat(var(--cols,5),minmax(0,1fr));gap:8px;align-items:start}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:4px;min-width:0}
+.col h2{margin:0;display:flex;align-items:center;gap:8px;padding:7px 9px;border-bottom:1px solid var(--line);font:600 13px var(--display);letter-spacing:.08em;text-transform:uppercase}
+.col h2 b{font:700 18px/1 var(--display);width:24px;height:22px;display:grid;place-items:center;border-radius:3px;color:#121412}
+.col h2 span{color:var(--muted);font:11px var(--mono);margin-left:auto;letter-spacing:0}
+.list{display:grid;padding:4px}
+.it{display:grid;gap:1px;padding:5px 6px;border-radius:3px;min-width:0}
+.it:hover{background:var(--panel2)}
+.it .nm{font:600 13.5px/1.2 var(--body);overflow-wrap:anywhere}
+.it .st{font:11px/1.3 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.it .sub{font-size:11.5px;color:var(--muted);line-height:1.3}
+.it .src{font:10.5px var(--mono);color:var(--muted);opacity:.85}
+.it button.cal{font:10.5px var(--mono);background:none;border:1px solid var(--line);color:var(--accent);border-radius:3px;padding:0 4px;cursor:pointer;justify-self:start}
+.tag{font:600 9px var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:0 4px;border-radius:2px;margin-left:5px;vertical-align:1px;white-space:nowrap;border:1px solid var(--muted);color:var(--muted)}
+.tag.loot{border-color:var(--accent);color:var(--accent)}
+.tag.flesh{background:var(--flesh);border-color:var(--flesh);color:#121412}
+.tag.warn{border-color:var(--tS);color:var(--tS)}
+.tag.good{border-color:var(--tC);color:var(--tC)}
+.bS{background:var(--tS)}.bA{background:var(--tA)}.bB{background:var(--tB)}.bC{background:var(--tC)}.bD{background:var(--tD);color:var(--fg)!important}.bQ{background:var(--tQ);color:var(--fg)!important}
+.cD .it{opacity:.75}
+/* ammo ladder */
+.cal-row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:10px;align-items:start;padding-block:7px;border-bottom:1px solid var(--line)}
+.cal-row h3{margin:0;font:600 17px/1.1 var(--display);color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.chip{display:grid;grid-template-columns:auto minmax(0,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--panel)}
+.chip>b{font:700 15px/1 var(--display);display:grid;place-items:center;width:22px;color:#121412}
+.chip>div{padding:3px 8px 4px;display:grid;min-width:0}
+.chip .nm{font:600 13px/1.15 var(--body);white-space:nowrap}
+.chip .st{font:11px/1.2 var(--mono);color:var(--muted);white-space:nowrap}
+.chip.dim{opacity:.55}
+/* lookup + table */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:720px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font:600 12px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--panel)}
+td .t{display:inline-grid;place-items:center;width:20px;height:18px;font:700 14px var(--display);border-radius:3px;color:#121412}
+td.v{font:600 11px var(--mono);letter-spacing:.05em;white-space:nowrap}
+.vKEEP{color:var(--tS)}.vUSE{color:var(--tB)}.vEARLY{color:var(--tC)}.vSELL{color:var(--muted)}.vSCAV{color:var(--flesh)}.vCHECK,.vUTILITY{color:var(--tQ)}
+td .st{font:11.5px var(--mono);color:var(--muted)}
+.empty{color:var(--muted);padding:20px 0}
+.notes{color:var(--muted);font-size:12.5px;max-width:80ch;display:grid;gap:4px;margin-top:18px}
+.notes b{color:var(--fg)}
+table.loot{min-width:640px}
+.tag.dim{opacity:.55}
+table.loot td.ic{width:36px;padding:2px 4px}
+table.loot td.ic img{display:block;background:var(--panel2);border-radius:3px}
+table.loot td.n{font:500 13px var(--mono);text-align:right;white-space:nowrap}
+table.loot td .st,table.loot td.st{white-space:nowrap}
+.up{color:var(--tC);font:11px var(--mono)}.dn{color:var(--tS);font:11px var(--mono)}
+h3.sec{font:600 15px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:16px 0 6px}
+label.lvl{font:500 12px var(--body);color:var(--muted);display:flex;align-items:center;gap:6px}
+label.lvl input{width:58px;font:500 13px var(--mono);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:4px 6px}
+td.wrap{white-space:normal!important;max-width:420px}
+.stgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.stc{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 8px;display:grid;gap:2px;min-width:0}
+.stc.maxed{opacity:.55}
+.sth{display:flex;justify-content:space-between;align-items:center;gap:6px;font:600 14px var(--display);letter-spacing:.03em}
+.sth select{padding:2px 4px;font-size:12px}
+.anyof{display:grid;gap:3px;font-size:13px}
+.routes{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px}
+.rt{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 10px;min-width:0}
+.rt.on{border-color:var(--tC)}
+.rt h4{margin:0 0 4px;font:600 15px var(--display);letter-spacing:.03em}
+.rt h4 a{color:var(--fg);text-decoration:none}.rt h4 a:hover{color:var(--accent)}
+.rt ul{margin:0;padding-left:18px;font-size:13px;display:grid;gap:2px}
+.rt li.opt{color:var(--muted)}
+.keys2{margin-bottom:8px;font-size:13px}
+@media (max-width:1000px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.board{grid-template-columns:1fr}.cal-row{grid-template-columns:1fr}.keys{display:none}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="top">
+    <h1>Field <span>Card</span></h1>
+    <input id="q" type="search" placeholder="Found something? Type its name: BT, Altyn, Pilgrim, AK-74N…" aria-label="Look up any item" autocomplete="off">
+    <span class="keys"><kbd>/</kbd> search · <kbd>Esc</kbd> clear · <kbd>1</kbd>–<kbd>0</kbd> tabs</span>
+  </div>
+  <nav id="tabs" role="tablist"></nav>
+</header>
+<div class="bar" id="bar"></div>
+<main id="out"></main>
+<section class="notes" id="notes"></section>
+</div>
+
+<script>
+let ITEMS=[],LOOT={items:[],icons:{}},NEEDS=null,ROUTES=[];
+const CATS=[
+ {id:"ammo",label:"Ammo",rule:"<b>Tier = penetration</b> vs armor class (10 pen per class). S 50+ · A 40–49 · B 30–39 · C 20–29 · D under 20.",
+  notes:["<b>Pick up:</b> any S/A round and anything tagged <span class='tag loot'>loot</span> (no trader sells it).","<b>Stash:</b> S/A for calibers you run; B as budget ammo for your main gun; sell C/D unless tagged <span class='tag flesh'>flesh</span> for unarmored AI.","Buckshot damage is per pellet."]},
+ {id:"guns",label:"Guns",rule:"<b>Tier = community consensus</b> (Leprestore Sept 2026, Boostmatch Feb 2026). <b>Ammo matters more than the gun.</b> Tap a caliber to see its ammo.",
+  notes:["<b>Early (trader LL1–2):</b> AUG A1, SKS / OP-SKS, ADAR, Vityaz, AKS-74U/UB, MP5, AKM, AK-74N.","<b>Work toward:</b> Prapor LL3 (BP ammo, AK-103/105), Peacekeeper LL3 (M4A1, HK416, SR-25, MP7, P90), Skier LL3 (TX-15, MCX).","<b>Before selling</b> bolt-actions (Mosin, SV-98, M700) or an M4A1, check your Gunsmith / Punisher tasks.","<b>Keep</b> AK and AR platforms: their parts fit many variants. <span class='tag'>?</span> = no tier list ranks it; judge by its ammo."]},
+ {id:"armor",label:"Armor",rule:"<b>Tier = highest class</b> incl. default plates. Class 6 S · 5 A · 4 B · 3 C · 2 or less D. Body armor needs a separate rig; armored rigs replace the rig slot.",
+  notes:["<b>Plates only cover the center chest.</b> Stomach, sides and neck rely on the soft class. <span class='tag'>plates only</span> carriers leave those bare.","Plates can be swapped; trader carriers marked “no plates” need plates bought separately.","<span class='tag warn'>heavy</span> = −6% move or worse. Weight drains stamina and ergo.","<b>Value picks:</b> Zhuk Press (Ref LL1), Kirasa-N and 6B13 (Ragman LL2), Interceptor OTV (Ref LL2), Zhuk EMR (Ref LL4, class 6, light)."]},
+ {id:"helmets",label:"Helmets",rule:"<b>Tier = class</b>, minus one for heavy sound muffling. Class 5 S · 4 A · 4 + muffles sound B · 3 C · 2 or less D.",
+  notes:["High-cut helmets (FAST, AirFrame, EXFIL, TC 800) don't muffle your hearing. That's why they're favored.","<span class='tag warn'>blocks headset</span>: the SSh-68 only takes a few headsets. Tor-2 conflicts with two.","Altyn / Rys-T: class 5 with face shield. Great for close fights, heavy and muffled. Can't be listed on flea.","<b>Budget:</b> 6B47 (Prapor LL2), Kiver-M (Ragman LL1), TC 800 / TC-2001 (class 4, Peacekeeper LL2)."]},
+ {id:"bags",label:"Bags",rule:"<b>Tier = slots</b>: 40+ S · 35–39 A · 30–34 B · 20–29 C · under 20 D. Bags that take more stash than they hold are D.",
+  notes:["<span class='tag good'>space saver</span> = holds more than its footprint; store it packed to gain stash space.","<b>Early:</b> Mechanism (Ragman LL2, 32 slots, 1 kg), Berkut, MBSS. Trooper 35 (Ragman LL4) is the light 35-slot upgrade.","<b>Keep one found-in-raid Pilgrim</b> for Sew it Good Pt1.","<b>Sell:</b> VKBO, sling bag, Transformer, Duffle, NICE COMM 3."]},
+ {id:"rigs",label:"Rigs",rule:"<b>Tier = slots</b> (unarmored rigs): 20+ S · 18 A · 16 B · 12–14 C · under 12 D. Pair with body armor.",
+  notes:["Mag-heavy loadouts want rows of 1x2 slots (Triton, Commando, Zhuk, MPPV). The Alpha's 1x3 slots fit long mags.","<span class='tag good'>light</span> rigs (Thunderbolt, D3CRX) fit 16–18 slots into 3x3. Keep them.","Cheapest decent rig: Scout-Sniper for one pack of milk (Prapor LL1)."]},
+ {id:"stims",label:"Stims",rule:"<b>Tier = how useful the effect is in a fight or loot run</b>, from each stim's actual buffs and debuffs. All stims are 1×1 and worth picking up. Badges show task / hideout / craft uses at your level (set it on the Loot tab).",
+  notes:["<b>Carry kit:</b> one heal stim (Propital or eTG-c) and Zagustin cover most bad fights. SJ6 for long runs, M.U.L.E. when hauling loot.","<b>Effects stack</b> but debuffs do too. Most stims dehydrate you; drink after.","<b>Quest stims:</b> many tasks want stims found in raid; keep FIR ones until the badge clears.","<span class='tag'>late</span> = only wanted by tasks 10+ levels above you (e.g. Lv50 <i>Get a Foothold</i> wants 30 each of eight stims). Use or sell those for now."]},
+ {id:"loot",label:"Loot",rule:"<b>Tier = ₽ per slot</b> (best of flea after ~10% fees and trader). S 100k+ · A 40k+ · B 15k+ · C 5k+ · D under 5k. <span class='tag good'>hideout</span> / <span class='tag good'>task</span> badges = used somewhere; check Needs before selling.",
+  notes:["<b>Junk box rule:</b> keep anything with a <span class='tag good'>hideout</span> or <span class='tag good'>task</span> badge until you've built/finished it. FIR counts matter: a found-in-raid copy can't be replaced by a bought one.","<b>Flea needs level 15</b>, and many items need more (shown as <span class='tag warn'>flea Lv 35</span>). Set your level so the sell price is one you can actually get.","<b>Station consumables</b> (badge in green): fuel tanks run the Generator, gas mask air filters and FP-100s run the Air Filtering Unit, water filters run the Water Collector (makes purified water for crafts), graphics cards fill the Bitcoin Farm. Keep a stack of each once that station is built.","<span class='tag'>craft ×N</span> = input to N hideout crafts (hover for which). <span class='tag dim'>late</span> = only wanted by tasks 10+ levels above you.","<span class='tag'>thin</span> = 2 or fewer flea offers; that price is a troll listing, so the trader price is used instead.","Prices are PvE flea averages from tarkov.dev, frozen when the page was built. RatScanner gives the live price in raid."]}
+,
+ {id:"needs",label:"Needs",rule:"",notes:["<b>Shopping list</b> = items for tasks you've started plus the next level of each hideout station. Keep these; FIR means it must be found in raid, a flea copy won't count.","<b>Hideout levels:</b> set each station to what you've actually built. The page remembers it in this browser. Ticking them on tarkovtracker.org makes it permanent and feeds the daily refresh.","Task progress comes from TarkovMonitor via TarkovTracker. Tasks gated by story chapters or trader loyalty only show once you accept them."]},
+ {id:"routes",label:"Routes",rule:"",notes:["Tasks are grouped by the map their remaining objectives happen on. Stack everything on one map into a single raid.","<b>Started</b> = accepted in game. Unlocked-but-not-started tasks are listed after; accept them before the raid so progress counts.","Hand-ins, trader levels and skill objectives sit under <i>Anywhere / hideout</i>."]}
+];
+const TIERS=["S","A","B","C","D"];const VL={S:"Keep",A:"Keep",B:"Use",C:"Early only",D:"Sell","?":"Unranked"};
+const st={cat:"ammo",q:"",grp:"",ammoCal:"",view:"board",lvl:20,lootCat:"",lootUsed:false};
+try{const s=JSON.parse(localStorage.getItem("fieldCard")||"{}");Object.assign(st,{cat:s.cat||st.cat,ammoCal:s.ammoCal||"",lvl:s.lvl||20,lootCat:s.lootCat||""});}catch(e){}
+function save(){try{localStorage.setItem("fieldCard",JSON.stringify({cat:st.cat,ammoCal:st.ammoCal,lvl:st.lvl,lootCat:st.lootCat}))}catch(e){}}
+let LOOTBYID={};
+const fmt=n=>n==null?"–":n>=1e6?(n/1e6).toFixed(n>=1e7?0:1)+"M":n>=1e3?Math.round(n/1e3)+"k":String(Math.round(n));
+const LT=[[100000,"S"],[40000,"A"],[15000,"B"],[5000,"C"],[0,"D"]];
+const LV={S:"Always grab",A:"Grab",B:"If room",C:"Filler",D:"Leave"};
+function lootCalc(r){const fl=Math.max(15,r.fleaLevel||15);const fleaOk=!r.fleaBanned&&!r.thin&&!!r.flea&&st.lvl>=fl;
+  const best=fleaOk?Math.max(r.fleaNet,r.traderPrice):r.traderPrice;const ps=best/(r.w*r.h);
+  return{fleaOk,fl,ps,tier:LT.find(([f])=>ps>=f)[1],sellTo:fleaOk&&r.fleaNet>r.traderPrice?"Flea":(r.trader||"–"),sellPrice:best};}
+function useInfo(r){const u=r.uses||{};const t=u.tasks||[];const soon=t.filter(x=>x[1]<=st.lvl+10),late=t.filter(x=>x[1]>st.lvl+10);
+  const sum=a=>a.reduce((s,x)=>s+x[0],0);return{hideout:u.hideout||0,hfir:u.hideoutFir||0,kappa:u.kappa||0,task:sum(soon),tfir:sum(soon.filter(x=>x[2])),late:sum(late),lateLvl:late.length?Math.min(...late.map(x=>x[1])):0,crafts:r.crafts||[],station:r.station};}
+function usesHtml(r){if(!r)return"";const u=useInfo(r);let h="";
+  if(u.hideout)h+=`<span class="tag good">hideout ×${u.hideout}</span>`;
+  if(u.task)h+=`<span class="tag good">task ×${u.task}</span>`;
+  const fir=u.hfir+u.tfir;if(fir)h+=`<span class="tag warn">FIR ×${fir}</span>`;
+  if(u.station)h+=`<span class="tag good" title="Consumed by this station while it runs">${esc(u.station)}</span>`;
+  if(u.crafts.length)h+=`<span class="tag" title="${esc(u.crafts.join(", "))}">craft ×${u.crafts.length}</span>`;
+  if(u.kappa)h+=`<span class="tag">kappa</span>`;
+  if(u.late)h+=`<span class="tag dim" title="Tasks at Lv ${u.lateLvl}+">late ×${u.late}</span>`;return h;}
+function isUsed(r){const u=useInfo(r);return u.hideout||u.task||u.station||u.crafts.length;}
+function lootRow(r){const c=lootCalc(r);const ic=LOOT.icons[r.id];
+  const flea=r.fleaBanned?'<span class="tag warn">banned</span>':!r.flea?"–":`${fmt(r.flea)}${r.thin?'<span class="tag">thin</span>':""}${st.lvl<c.fl?`<span class="tag warn">flea Lv ${c.fl}</span>`:""}`;
+  const ch=r.change48h==null?"":`<span class="${r.change48h>=0?"up":"dn"}">${r.change48h>=0?"▲":"▼"}${Math.abs(r.change48h).toFixed(0)}%</span>`;
+  return`<tr><td><span class="t ${tcls(c.tier)}">${c.tier}</span></td><td class="ic">${ic?`<img src="${ic}" alt="" width="32" height="32" loading="lazy">`:""}</td><td>${esc(r.name)}${usesHtml(r)}<div class="st">${esc(r.cat)} · ${r.w}×${r.h}</div></td><td class="n"><b>${fmt(c.ps)}</b></td><td class="st">${esc(c.sellTo)} ${fmt(c.sellPrice)}</td><td class="st">${flea} ${ch}</td><td class="st">${esc(r.trader||"–")} ${fmt(r.traderPrice)}</td></tr>`;}
+const LOOT_HEAD='<thead><tr><th>Tier</th><th></th><th>Item</th><th>₽/slot</th><th>Sell to</th><th>Flea</th><th>Trader</th></tr></thead>';
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const tcls=t=>t==="?"?"bQ":"b"+t;
+function tagHtml(tags){return(tags||[]).map(t=>{const c=t==="loot"?"loot":t==="flesh"?"flesh":["heavy","blocks headset","headset conflict","wastes space","muffles sound"].includes(t)?"warn":["space saver","light"].includes(t)?"good":"";return`<span class="tag ${c}">${esc(t)}</span>`}).join("")}
+function itemHtml(i){
+  const calBtn=i.cat==="guns"?`<button class="cal" data-cal="${esc(i.cal)}" title="Show ${esc(i.cal)} ammo">${esc(i.cal)} ammo →</button>`:"";
+  const sub=(i.cat==="guns"||i.cat==="stims")?`<span class="sub">${esc(i.detail)}</span>`:"";
+  const dyn=i.cat==="stims"?usesHtml(LOOTBYID[i.lid]):"";
+  return`<div class="it" title="${esc(i.name)} — ${esc(i.detail)} — ${esc(i.src)}"><span class="nm">${esc(i.short)}${tagHtml(i.tags)}${dyn}</span><span class="st">${esc(i.cat==="guns"?i.group+" · "+i.stat.split(" · ").slice(1).join(" · "):i.stat)}</span>${sub}${calBtn}<span class="src">${esc(i.src)}</span></div>`;
+}
+function renderTabs(){
+  document.getElementById("tabs").innerHTML=CATS.map((c,k)=>`<button role="tab" data-c="${c.id}" aria-selected="${!st.q&&st.cat===c.id}">${k+1} · ${c.label}<small>${c.id==="loot"?LOOT.items.length:c.id==="needs"?(NEEDS?NEEDS.started.length:"–"):c.id==="routes"?ROUTES.filter(m=>m.map!=="Anywhere / hideout").length:ITEMS.filter(i=>i.cat===c.id).length}</small></button>`).join("");
+  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{st.cat=b.dataset.c;st.grp="";clearQ();save();render();});
+}
+function clearQ(){st.q="";document.getElementById("q").value="";}
+function groupsOf(cat){return[...new Set(ITEMS.filter(i=>i.cat===cat).map(i=>i.group))];}
+function render(){
+  renderTabs();
+  const bar=document.getElementById("bar"),out=document.getElementById("out"),notes=document.getElementById("notes");
+  if(st.q){ // global lookup
+    const q=st.q.toLowerCase();
+    const r=ITEMS.filter(i=>(i.name+" "+i.group).toLowerCase().includes(q)).sort((a,b)=>"SABCD?".indexOf(a.tier)-"SABCD?".indexOf(b.tier));
+    bar.innerHTML=`<span class="rule"><b>${r.length}</b> match${r.length===1?"":"es"} across all categories for “${esc(st.q)}”. <b>Esc</b> to go back.</span>`;
+    notes.innerHTML="";
+    const lr=LOOT.items.filter(i=>(i.name+" "+i.short).toLowerCase().includes(q));
+    bar.innerHTML=`<span class="rule"><b>${r.length+lr.length}</b> match${r.length+lr.length===1?"":"es"} for “${esc(st.q)}”. <b>Esc</b> to go back.</span>`;
+    const lootTbl=lr.length?`<h3 class="sec">Loot</h3><div class="tbl"><table class="loot">${LOOT_HEAD}<tbody>${lr.slice(0,60).map(lootRow).join("")}</tbody></table></div>`:"";
+    if(!r.length&&lr.length){out.innerHTML=lootTbl;return;}
+    out.innerHTML=r.length?`<div class="tbl"><table><thead><tr><th>Tier</th><th>Verdict</th><th>Item</th><th>Type</th><th>Key stats</th><th>Get it</th></tr></thead><tbody>${r.slice(0,80).map(i=>`<tr><td><span class="t ${tcls(i.tier)}">${i.tier}</span></td><td class="v v${i.v}">${i.v}</td><td>${esc(i.name)}${tagHtml(i.tags)}<div class="st">${esc(i.detail)}</div></td><td>${esc(CATS.find(c=>c.id===i.cat).label)} · ${esc(i.group)}</td><td class="st">${esc(i.stat)}</td><td class="st">${esc(i.src)}</td></tr>`).join("")}</tbody></table></div>`+lootTbl:`<p class="empty">Nothing matches “${esc(st.q)}”. Try part of the name, e.g. “BT” or “Kirasa”.</p>`;
+    return;
+  }
+  const C=CATS.find(c=>c.id===st.cat);notes.innerHTML=C.notes.map(n=>`<div>${n}</div>`).join("");
+  if(st.cat==="loot"){renderLoot(bar,out,C);return;}
+  if(st.cat==="needs"){renderNeeds(bar,out);return;}
+  if(st.cat==="routes"){renderRoutes(bar,out);return;}
+  const all=ITEMS.filter(i=>i.cat===st.cat);
+  if(st.cat==="ammo"){
+    const cals=groupsOf("ammo").sort((x,y)=>Math.max(...all.filter(r=>r.group===y).map(r=>r.num.pen))-Math.max(...all.filter(r=>r.group===x).map(r=>r.num.pen)));
+    bar.innerHTML=`<span class="rule">${C.rule}</span><select id="acal" aria-label="Caliber"><option value="">All calibers</option>${cals.map(c=>`<option${c===st.ammoCal?" selected":""}>${esc(c)}</option>`).join("")}</select>`;
+    document.getElementById("acal").onchange=e=>{st.ammoCal=e.target.value;save();render();};
+    const show=st.ammoCal?cals.filter(c=>c===st.ammoCal||c.startsWith(st.ammoCal)):cals;
+    if(!show.length){out.innerHTML=`<p class="empty">No ammo data for ${esc(st.ammoCal)} (grenade/rocket rounds aren't tracked). Pick another caliber.</p>`;return;}
+    out.innerHTML=show.map(c=>{const l=all.filter(r=>r.group===c).sort((a,b)=>b.num.pen-a.num.pen||b.num.dmg-a.num.dmg);
+      return`<div class="cal-row"><h3>${esc(c)}</h3><div class="chips">${l.map(r=>`<div class="chip${r.tier==="D"&&!r.tags.includes("flesh")?" dim":""}" title="${esc(r.name)} — ${esc(r.detail)} — ${esc(r.src)}"><b class="${tcls(r.tier)}">${r.tier}</b><div><span class="nm">${esc(r.short)}${tagHtml(r.tags)}</span><span class="st">${esc(r.stat)}</span></div></div>`).join("")}</div></div>`}).join("");
+    return;
+  }
+  const grps=groupsOf(st.cat);
+  bar.innerHTML=`<span class="rule">${C.rule}</span>${grps.length>1?`<div class="grp"><button class="pill" data-g="" aria-pressed="${!st.grp}">All</button>${grps.map(g=>`<button class="pill" data-g="${esc(g)}" aria-pressed="${st.grp===g}">${esc(g)}</button>`).join("")}</div>`:""}`;
+  bar.querySelectorAll(".pill").forEach(b=>b.onclick=()=>{st.grp=b.dataset.g;render();});
+  const list=all.filter(i=>!st.grp||i.group===st.grp);
+  const tiers=list.some(i=>i.tier==="?")?[...TIERS,"?"]:TIERS;
+  out.innerHTML=`<div class="board" style="--cols:${tiers.length}">${tiers.map(t=>{const l=list.filter(i=>i.tier===t);
+    return`<section class="col c${t==="?"?"Q":t}"><h2><b class="${tcls(t)}">${t}</b>${(st.cat==="stims"&&t==="C")?"Sell":VL[t]}<span>${l.length}</span></h2><div class="list">${l.map(itemHtml).join("")||'<span class="it st">none</span>'}</div></section>`}).join("")}</div>`;
+  out.querySelectorAll("button.cal").forEach(b=>b.onclick=()=>{st.cat="ammo";st.ammoCal=b.dataset.cal.replace(/ ga$/," ga");save();render();window.scrollTo(0,0);});
+}
+function renderLoot(bar,out,C){
+  const cats=[...new Set(LOOT.items.map(r=>r.cat).filter(Boolean))].sort();
+  const upd=(LOOT.pricesUpdated||"").slice(0,16).replace("T"," ");
+  bar.innerHTML=`<span class="rule">${C.rule}<br><span class="st">PvE prices as of ${esc(upd)} UTC</span></span>
+   <label class="lvl">My level <input id="lvl" type="number" min="1" max="79" value="${st.lvl}"></label>
+   <select id="lcat" aria-label="Category"><option value="">All categories</option>${cats.map(c=>`<option${c===st.lootCat?" selected":""}>${esc(c)}</option>`).join("")}</select>
+   <button class="pill" id="lused" aria-pressed="${st.lootUsed}">Used in hideout / tasks / crafts</button>`;
+  document.getElementById("lvl").onchange=e=>{st.lvl=Math.max(1,parseInt(e.target.value,10)||1);save();render();};
+  document.getElementById("lcat").onchange=e=>{st.lootCat=e.target.value;save();render();};
+  document.getElementById("lused").onclick=()=>{st.lootUsed=!st.lootUsed;render();};
+  const rows=LOOT.items.filter(r=>(!st.lootCat||r.cat===st.lootCat)&&(!st.lootUsed||isUsed(r)))
+    .map(r=>[r,lootCalc(r).ps]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  out.innerHTML=rows.length?`<div class="tbl"><table class="loot">${LOOT_HEAD}<tbody>${rows.map(lootRow).join("")}</tbody></table></div>`:'<p class="empty">No items in this filter.</p>';
+}
+// ---------------- Needs
+let stationLv={};try{stationLv=JSON.parse(localStorage.getItem("fieldCardStations")||"{}")}catch(e){}
+let needsShowUpcoming=false;
+function saveStations(){try{localStorage.setItem("fieldCardStations",JSON.stringify(stationLv))}catch(e){}}
+function stLevel(s){return stationLv[s.id]!=null?stationLv[s.id]:s.trackerLevel;}
+function icon(id){const ic=LOOT.icons[id];return ic?`<img src="${ic}" alt="" width="28" height="28" loading="lazy">`:"";}
+function renderNeeds(bar,out){
+  if(!NEEDS){bar.innerHTML="";out.innerHTML='<p class="empty">No progress data yet.</p>';return;}
+  const N=NEEDS,lvNote=N.levelUsed!==N.trackerLevel?` <span class="tag warn">tracker says Lv ${N.trackerLevel}; set it on tarkovtracker.org</span>`:"";
+  bar.innerHTML=`<span class="rule"><b>Level ${N.levelUsed}</b>${lvNote} · ${N.tasksDone} tasks done · <b>${N.started.length} started</b> · ${N.unlocked.length} more unlocked<br><span class="st">Progress synced ${esc(N.generatedAt.slice(0,16).replace("T"," "))} UTC</span></span>
+   <button class="pill" id="nup" aria-pressed="${needsShowUpcoming}">Include unlocked + upcoming tasks</button>`;
+  document.getElementById("nup").onclick=()=>{needsShowUpcoming=!needsShowUpcoming;render();};
+  // shopping list
+  const tot={};const add=(id,name,c,fir,why,urg)=>{if(c<=0)return;const t=tot[id]||(tot[id]={id,name,c:0,fir:0,why:[],urg:9});t.c+=c;if(fir)t.fir+=c;t.why.push(why);t.urg=Math.min(t.urg,urg);};
+  const maxU=needsShowUpcoming?3:1;
+  for(const it of N.taskItems)for(const s of it.sources)if(s.kind==="task"&&s.urgency<=maxU)add(it.id,it.name,s.count,s.fir,`${s.label} ×${s.count}`,s.urgency);
+  for(const s of N.stations){const cur=stLevel(s);const nx=s.levels.find(l=>l.level===cur+1);if(!nx)continue;
+    for(const i of nx.items)add(i.id,i.name,i.count,i.fir,`${s.name} L${nx.level} ×${i.count}`,2);}
+  const rows=Object.values(tot).sort((a,b)=>a.urg-b.urg||b.c-a.c);
+  const urgL={1:"started task",2:"next hideout",3:"unlocked task"};
+  const shop=rows.length?`<div class="tbl"><table class="loot"><thead><tr><th></th><th>Item</th><th>Need</th><th>FIR</th><th>For</th><th>Flea</th></tr></thead><tbody>${rows.map(r=>{const L=LOOTBYID[r.id];
+    return`<tr><td class="ic">${icon(r.id)}</td><td>${esc(r.name)}<div class="st">${urgL[r.urg]}</div></td><td class="n"><b>${r.c}</b></td><td class="n">${r.fir?`<span class="tag warn">${r.fir}</span>`:""}</td><td class="st wrap">${esc(r.why.slice(0,3).join(" · "))}${r.why.length>3?` +${r.why.length-3}`:""}</td><td class="st">${L&&L.flea&&!L.fleaBanned?fmt(L.flea):(L&&L.fleaBanned?'<span class="tag warn">banned</span>':"–")}</td></tr>`}).join("")}</tbody></table></div>`:'<p class="empty">Nothing needed right now.</p>';
+  const anyOf=N.anyOf.filter(a=>a.urgency<=maxU);
+  const anyHtml=anyOf.length?`<h3 class="sec">Any-of hand-ins</h3><div class="anyof">${anyOf.map(a=>`<div><b>${esc(a.task)}</b>: ${esc(a.label)} ×${a.count}${a.fir?' <span class="tag warn">FIR</span>':""}</div>`).join("")}</div>`:"";
+  // station grid
+  const grid=`<h3 class="sec">Hideout levels <span class="st">(set what you've built)</span></h3><div class="stgrid">${N.stations.map(s=>{const cur=stLevel(s);const nx=s.levels.find(l=>l.level===cur+1);
+    const opts=Array.from({length:s.maxLevel+1},(_,k)=>`<option value="${k}"${k===cur?" selected":""}>${k===0?"not built":"L"+k}</option>`).join("");
+    const req=nx&&nx.stations.length?`<div class="st">needs ${nx.stations.map(x=>esc(x[0])+" L"+x[1]).join(", ")}</div>`:"";
+    return`<div class="stc${cur>=s.maxLevel?" maxed":""}"><div class="sth"><span>${esc(s.name)}</span><select data-st="${s.id}" aria-label="${esc(s.name)} level">${opts}</select></div>${nx?`<div class="st">next L${nx.level}: ${nx.items.filter(i=>i.count>0).length} items</div>${req}`:'<div class="st">maxed</div>'}</div>`}).join("")}</div>`;
+  const started=`<h3 class="sec">Started tasks</h3><div class="chips">${N.started.map(t=>`<span class="tag good">${esc(t)}</span>`).join(" ")}</div>`;
+  out.innerHTML=`<h3 class="sec">Shopping list</h3>${shop}${anyHtml}${started}${grid}`;
+  out.querySelectorAll("select[data-st]").forEach(el=>el.onchange=()=>{stationLv[el.dataset.st]=parseInt(el.value,10);saveStations();render();});
+}
+// ---------------- Routes
+let routeMap=null,routeStartedOnly=false;
+function renderRoutes(bar,out){
+  if(!ROUTES.length){bar.innerHTML="";out.innerHTML='<p class="empty">No route data yet.</p>';return;}
+  if(!routeMap||!ROUTES.find(m=>m.map===routeMap)){const best=[...ROUTES].filter(m=>m.map!=="Anywhere / hideout").sort((a,b)=>b.tasks.filter(t=>t.started).length-a.tasks.filter(t=>t.started).length)[0];routeMap=(best||ROUTES[0]).map;}
+  bar.innerHTML=`<div class="grp">${ROUTES.map(m=>{const s=m.tasks.filter(t=>t.started).length;return`<button class="pill" data-m="${esc(m.map)}" aria-pressed="${m.map===routeMap}">${esc(m.map)} <b>${s}</b>/${m.tasks.length}</button>`}).join("")}</div>
+   <button class="pill" id="rso" aria-pressed="${routeStartedOnly}">Started only</button>`;
+  bar.querySelectorAll("button[data-m]").forEach(b=>b.onclick=()=>{routeMap=b.dataset.m;render();});
+  document.getElementById("rso").onclick=()=>{routeStartedOnly=!routeStartedOnly;render();};
+  const m=ROUTES.find(x=>x.map===routeMap);const tasks=m.tasks.filter(t=>!routeStartedOnly||t.started).sort((a,b)=>b.started-a.started||a.name.localeCompare(b.name));
+  const keys=[...new Set(tasks.flatMap(t=>t.keys))];
+  out.innerHTML=`${keys.length?`<div class="keys2"><b>Keys for this map:</b> ${keys.map(k=>`<span class="tag warn">${esc(k)}</span>`).join(" ")}</div>`:""}<div class="routes">${tasks.map(t=>`<section class="rt${t.started?" on":""}"><h4>${t.wiki?`<a href="${esc(t.wiki)}" target="_blank" rel="noopener">${esc(t.name)}</a>`:esc(t.name)} <span class="st">${esc(t.trader)}</span>${t.started?'<span class="tag good">started</span>':'<span class="tag">not started</span>'}${t.kappa?'<span class="tag">kappa</span>':""}</h4><ul>${t.objectives.map(o=>`<li${o.optional?' class="opt"':""}>${esc(o.text)}${o.count>1?` <span class="st">${o.done}/${o.count}</span>`:""}</li>`).join("")}</ul></section>`).join("")||'<p class="empty">No started tasks on this map.</p>'}</div>`;
+}
+const qEl=document.getElementById("q");
+qEl.addEventListener("input",e=>{st.q=e.target.value.trim();render();});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){clearQ();render();qEl.blur();return;}
+  if(e.target===qEl||e.target.tagName==="SELECT")return;
+  if(e.key==="/"){e.preventDefault();qEl.focus();return;}
+  let n=parseInt(e.key,10);if(n===0)n=10;if(n>=1&&n<=CATS.length){st.cat=CATS[n-1].id;st.grp="";clearQ();save();render();}
+});
+async function boot(){
+  document.getElementById("out").innerHTML='<p class="empty">Loading…</p>';
+  const get=u=>fetch(u,{cache:"no-cache"}).then(r=>r.ok?r.json():null).catch(()=>null);
+  const [g,l,n,r]=await Promise.all(["data/gear.json","data/loot.json","data/needs.json","data/routes.json"].map(get));
+  ITEMS=g||[];LOOT=l||{items:[],icons:{}};NEEDS=n;ROUTES=r||[];
+  LOOTBYID=Object.fromEntries(LOOT.items.map(x=>[x.id,x]));
+  if(!g)document.getElementById("out").innerHTML='<p class="empty">Couldn\'t load the data files. Reload the page.</p>';
+  render();
+}
+boot();
+</script>

@@ -183,6 +183,48 @@ def needs_export(
     console.print(f"[green]wrote[/] {out} ({len(res.items)} items, {len(res.any_of)} any-of)")
 
 
+fieldcard_app = typer.Typer(
+    help="Field Card page (Ammo...Loot, Needs, Routes).", no_args_is_help=True
+)
+app.add_typer(fieldcard_app, name="fieldcard")
+
+
+@fieldcard_app.command("build")
+def fieldcard_build(
+    source: str = typer.Option("file", help="Progress source: file | live | none."),
+    level: int = typer.Option(0, help="Player level if the tracker's is stale (0 = tracker)."),
+    dest: str = typer.Option("", help="Output folder (default out/fieldcard)."),
+    icons: bool = typer.Option(True, help="Embed item icons in loot.json."),
+) -> None:
+    """Write index.html + data/{gear,loot,needs,routes}.json for publishing."""
+    import shutil
+
+    from tarkov_ops.gamedata import load_gamedata
+    from tarkov_ops.publish import loot as loot_mod
+    from tarkov_ops.publish.fieldcard import build_needs_and_routes
+
+    s = get_settings()
+    out = Path(dest) if dest else s.out_dir / "fieldcard"
+    (out / "data").mkdir(parents=True, exist_ok=True)
+    assets = Path(__file__).parent / "publish" / "fieldcard_assets"
+    shutil.copyfile(assets / "template.html", out / "index.html")
+    shutil.copyfile(assets / "gear.json", out / "data" / "gear.json")
+    gd = load_gamedata()
+    n = loot_mod.export(gd, s.data_dir, out / "data" / "loot.json", icons=icons)
+    console.print(f"loot: {n} items")
+    prog = _load_progress(source)
+    if prog is None:
+        console.print("[yellow]no progress[/]: needs.json / routes.json not written")
+        return
+    needs, routes = build_needs_and_routes(gd, prog, s.data_dir, level=level or None)
+    (out / "data" / "needs.json").write_text(json.dumps(needs, separators=(",", ":")), "utf-8")
+    (out / "data" / "routes.json").write_text(json.dumps(routes, separators=(",", ":")), "utf-8")
+    console.print(
+        f"[green]built[/] {out}: {len(needs['started'])} started tasks, "
+        f"{len(needs['taskItems'])} task items, {len(routes)} route groups"
+    )
+
+
 def _shape_tree(data: Any, label: str = "root", max_keys: int = 40) -> Tree:
     """Render the shape (keys + types + sizes) of a JSON payload, not its values."""
     tree = Tree(f"[bold]{label}[/] {_describe(data)}")
