@@ -71,3 +71,11 @@ ADR-style, newest at the bottom. One line of context, one line of decision.
   writes level (verified in its source).
 - Routes: open objectives grouped by map (Night Factory, GZ 21+, Labs Dark folded in);
   map-less objectives under "Anywhere / hideout".
+
+## 2026-10-05 — Screenshot sync of active tasks
+
+- Synced 62 active side tasks from in-game screenshots to the tracker via one `POST /progress/tasks`
+  batch (`uncompleted` = open entry; the API has no "started" state). Rite of Passage → completed.
+- **The tracker cascades `uncompleted` to follow-up tasks** (it created 20 extra open entries, e.g.
+  Punisher Pt2). So "started" = open entry *whose own prerequisites are complete*. This reproduced
+  the screenshot list exactly (62/62, no extras).

@@ -119,9 +119,21 @@ def compute_task_state(gd: GameData, progress: ProgressData, level_window: int =
     }
     open_tasks = {tid for tid in eligible if tid not in done and tid not in failed}
     # Tasks TarkovMonitor saw you accept: the tracker holds them as not complete, not failed.
-    started = {t.id for t in progress.tasksProgress if not t.complete and not t.failed} & set(
-        eligible
-    )
+    # Tasks accepted in game: open tracker entries whose own prerequisites are done. Marking a
+    # task "uncompleted" on the tracker also creates open entries for its follow-ups, so an open
+    # entry alone doesn't mean accepted.
+    started = {
+        t.id
+        for t in progress.tasksProgress
+        if not t.complete
+        and not t.failed
+        and t.id in eligible
+        and all(
+            r["task"] in done
+            for r in eligible[t.id].get("taskRequirements", [])
+            if "complete" in (r.get("status") or ["complete"])
+        )
+    }
 
     # available: started, or prerequisites met and level reached. 1.0 also gates tasks on story
     # progress (globalVariable) and trader loyalty, which the tracker doesn't record, so tasks
